@@ -36,7 +36,7 @@ public class Controller2D extends JPanel implements MouseListener, MouseMotionLi
     private final int imgWidth;
     private final int imgHeight;
 
-    // poslední známá pozice myši pro G
+    // poslední známá pozice myši (pro G)
     private int lastMouseX;
     private int lastMouseY;
 
@@ -58,7 +58,8 @@ public class Controller2D extends JPanel implements MouseListener, MouseMotionLi
         setFocusable(true);
         requestFocusInWindow();
 
-        // klávesové zkratky: G = ořez + seedfill, H = scanline fill
+        // klávesové zkratky:
+        // G = ořez + seed fill, H = scanline fill, C = vymazání plátna
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -67,7 +68,7 @@ public class Controller2D extends JPanel implements MouseListener, MouseMotionLi
                 // G = stejné chování jako prostřední tlačítko: ořez + seed fill
                 if (ch == 'g' || ch == 'G') {
 
-                    // bezpečnost: musí existovat oba polygony pro ořez
+                    // musí existovat oba polygony pro ořez
                     if (canvas.getPolygon().numberOfVertices() < 3) return;
                     if (canvas.getClippingPolygon().numberOfVertices() < 3) return;
 
@@ -90,20 +91,23 @@ public class Controller2D extends JPanel implements MouseListener, MouseMotionLi
 
                     repaint();
 
-                    // H = scanline fill hlavního polygonu (bez klipearu, čistě podle polygonu)
+                    // H = scanline fill hlavního polygonu (bez ořezu)
                 } else if (ch == 'h' || ch == 'H') {
 
                     // musí existovat hlavní polygon se 3+ vrcholy
                     if (canvas.getPolygon().numberOfVertices() < 3) return;
 
-                    // vezmeme všechny fillovací pixely ze ScanLine a obarvíme je FILL barvou
+                    // vyplníme vnitřek polygonu pomocí ScanLine plnou barvou FILL
                     ScanLine.getFill(canvas.getPolygon())
                             .forEach(coord -> canvas.drawPixel(
                                     new Pixel((int) coord.getX(), (int) coord.getY(), Colors.FILL)
                             ));
 
-                    // polygonové hrany zůstanou, jen se "pod ně" dobarví vnitřek
                     repaint();
+
+                    // C = kompletní vymazání plátna a polygonů
+                } else if (ch == 'c' || ch == 'C') {
+                    clearCanvas();
                 }
             }
         });
@@ -151,6 +155,16 @@ public class Controller2D extends JPanel implements MouseListener, MouseMotionLi
         canvas.setClippingPolygon(clippingPolygon);
 
         canvas.draw();
+        repaint();
+    }
+
+    private void clearCanvas() {
+        resetCanvas();
+        canvas.setPolygon(new Polygon());
+        canvas.setClippingPolygon(new Polygon());
+        selectedVertex = null;
+        selectedPolygon = null;
+        resetPreview();
         repaint();
     }
 
